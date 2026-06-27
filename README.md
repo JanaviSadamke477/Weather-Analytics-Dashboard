@@ -217,7 +217,7 @@ This project is licensed under the **MIT License**.
 
 # 👨‍💻 Author
 
-**Your Name**
+**Janavi Sadmake**
 
 - 💼 LinkedIn: https://linkedin.com/in/yourprofile
 - 💻 GitHub: https://github.com/yourusername
