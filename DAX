@@ -1,1 +1,147 @@
+-- =========================================
+-- WEATHER ANALYTICS DASHBOARD - DAX MEASURES
+-- =========================================
 
+
+-- 1. Average Temperature
+Avg Temp =
+AVERAGE('Current'[current.temp_c])
+
+
+-- 2. Average Feels-Like Temperature
+Avg FeelsLike =
+AVERAGE('Current'[current.feelslike_c])
+
+
+-- 3. Average Humidity
+Avg Humidity =
+AVERAGE('Current'[current.humidity])
+
+
+-- 4. Average Wind Speed
+Avg Wind Speed =
+AVERAGE('Current'[current.wind_kph])
+
+
+-- =========================================
+-- WEATHER COMFORT INDEX
+-- =========================================
+
+Weather Comfort Index =
+VAR Temp = [Avg Temp]
+VAR FeelsLike = [Avg FeelsLike]
+VAR Humidity = [Avg Humidity]
+VAR Wind = [Avg Wind Speed]
+
+RETURN
+ROUND(
+    100
+    - ABS(Temp - FeelsLike) * 5
+    - (Humidity * 0.3)
+    + (Wind * 0.5),
+0
+)
+
+
+-- =========================================
+-- COMFORT CATEGORY
+-- =========================================
+
+Comfort Category =
+SWITCH(
+    TRUE(),
+    [Weather Comfort Index] >= 70, "Comfortable",
+    [Weather Comfort Index] >= 50, "Moderate",
+    "Uncomfortable"
+)
+
+
+-- =========================================
+-- FEELS-LIKE IMPACT
+-- =========================================
+
+FeelsLike Impact (°C) =
+ROUND(
+    [Avg FeelsLike] - [Avg Temp],
+    1
+)
+
+
+-- =========================================
+-- DYNAMIC WEATHER INSIGHT
+-- =========================================
+
+Weather Insight =
+VAR Gap = [FeelsLike Impact (°C)]
+VAR Hum = [Avg Humidity]
+VAR Wind = [Avg Wind Speed]
+
+RETURN
+SWITCH(
+    TRUE(),
+
+    Gap >= 2 && Hum > 70,
+    "High humidity is increasing perceived heat and causing thermal discomfort.",
+
+    Gap >= 2 && Wind < 10,
+    "Low wind speed is trapping heat, making the weather feel warmer than actual temperature.",
+
+    Gap <= -2,
+    "Wind-chill effect is making the weather feel significantly cooler than the actual temperature.",
+
+    ABS(Gap) < 1,
+    "Feels-like temperature is close to the actual temperature, indicating relatively stable conditions.",
+
+    "Feels-like temperature differs significantly from actual temperature, indicating thermal stress."
+)
+
+
+-- =========================================
+-- AQI STATUS
+-- =========================================
+
+AQI Status =
+SWITCH(
+    TRUE(),
+    AVERAGE('Current'[current.air_quality.pm2_5]) <= 12, "Good",
+    AVERAGE('Current'[current.air_quality.pm2_5]) <= 35, "Moderate",
+    AVERAGE('Current'[current.air_quality.pm2_5]) <= 55, "Unhealthy for Sensitive Groups",
+    AVERAGE('Current'[current.air_quality.pm2_5]) <= 150, "Unhealthy",
+    "Very Unhealthy"
+)
+
+
+-- =========================================
+-- DATE & TIME FORMATTING
+-- =========================================
+
+Last Updated =
+MAX('Current'[current.last_updated])
+
+
+Formatted Last Updated =
+FORMAT([Last Updated], "dd MMM yyyy, hh:mm AM/PM")
+
+
+-- =========================================
+-- FORECAST AVERAGE
+-- =========================================
+
+Forecast Avg Temp =
+AVERAGE('Forecast_Day'[day.avgtemp_c])
+
+
+-- =========================================
+-- TOTAL PRECIPITATION
+-- =========================================
+
+Total Precipitation =
+SUM('Forecast_Day'[day.totalprecip_mm])
+
+
+-- =========================================
+-- AVERAGE RAIN CHANCE
+-- =========================================
+
+Average Rain Chance =
+AVERAGE('Forecast_Hour'[chance_of_rain])
